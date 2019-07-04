@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+        <meta name="theme-color" content="#2e3436" />
+
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="favicon-32x32.png"
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="favicon-16x16.png"
+        />
+
+        <link rel="stylesheet" href="style.css" />
+        <link
+            rel="stylesheet"
+            href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+            integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+            crossorigin="anonymous"
+        />
+
+        <title>Time Tracker</title>
+    </head>
+    <body>
+        <div id="time-tracker" :class="{ loaded: 1 }">
+            <main>
+                <div class="top-container">
+                    <div class="left"></div>
+                    <div class="center">
+                        <input
+                            class="new-task"
+                            type="text"
+                            placeholder="New task"
+                            @keyup.enter="inputTask($event.target)"
+                        />
+                    </div>
+                    <div class="right">
+                        <div
+                            class="total-duration"
+                            :class="{ visible: absoluteTotalDuration > 0 }"
+                        >
+                            <i class="far fa-clock"></i>
+                            <span
+                                class="clock"
+                                v-text="formatDuration(totalDuration, { showSeconds: absoluteTotalDuration < 60 })"
+                            ></span>
+                        </div>
+                    </div>
+                </div>
+
+                <task
+                    v-for="task in rootTasks"
+                    :key="task.id"
+                    :task="task"
+                    @add-task="addTask($event)"
+                    @remove-task="askToRemoveTask($event)"
+                    @reset-task="resetTask($event)"
+                    @start-task="startTask($event)"
+                    @stop-task="stopTask($event)"
+                    @move-task="moveTask($event)"
+                    @change-timeslot-begin="changeTimeslotBegin($event)"
+                    @change-timeslot-end="changeTimeslotEnd($event)"
+                    @remove-timeslot="askToRemoveTimeslot($event)"
+                    @timeslot-to-new-task="timeslotToNewTask($event)"
+                    @timeslot-to-task="timeslotToTask($event)"
+                >
+                </task>
+
+                <div v-if="rootTasks.length > 1" class="remove-all-container">
+                    <button
+                        type="button"
+                        @click="clearAll()"
+                        class="remove-all"
+                    >
+                        <i class="fas fa-trash-alt"></i>
+                        <span class="text">remove all</span>
+                    </button>
+                </div>
+            </main>
+
+            <confirm-dialog
+                v-if="ui.confirm.ok"
+                :config="ui.confirm"
+            ></confirm-dialog>
+        </div>
+
+        <script type="x-template" id="task">
+            <div
+                class="task"
+                draggable="true"
+                :class="{ active: task.isActive, dropzone: dropzone, dragging: dragging, subtask: task.parentId != null, collapsed: collapsed }"
+            >
+                <div class="task-head">
+                    <div class="left">
+                        <button type="button" title="Start"
+                            v-if="!task.isActive" @click="$emit('start-task', task.id)">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button type="button" title="Stop"
+                            v-if="task.isActive" @click="$emit('stop-task', task.id)">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                        <button type="button" class="add-subtask" title="Add subtask"
+                            @click="$emit('add-task', { parentId: task.id })" >
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                        <button type="button" class="toggle-collapse"
+                            v-if="task.timeslots.length || task.subTasks.length"
+                            :title="collapsed ? 'Expand' : 'Collapse'"
+                            @click="collapsed = !collapsed">
+                            <i v-if="collapsed" class="fas fa-caret-down"></i>
+                            <i v-if="!collapsed" class="fas fa-caret-up"></i>
+                        </button>
+                        <button type="button" title="Remove"
+                            @click="$emit('remove-task', task.id)">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+
+                    <div class="center">
+                        <div v-if="!editName" class="task-name" @click="toggleEdit()" v-text="task.name"></div>
+                        <input type="text" class="task-name edit" placeholder="Task name"
+                            v-focus v-if="editName" v-model="task._source.name" @keyup.enter="toggleEdit()" />
+                    </div>
+
+                    <div class="right">
+                        <div class="task-duration" v-text="formatDuration(task.duration, { showZero: false, showSeconds: task.duration < 60 })"></div>
+                    </div>
+                </div>
+
+                <div class="task-body" v-if="task.timeslots.length || task.subTasks.length">
+                    <div class="timeslots" v-if="task.timeslots.length">
+                        <timeslot
+                            v-for="timeslot in task.timeslots"
+                            :key="timeslot.id"
+                            :timeslot="timeslot"
+                            :task="task"
+                            @change-timeslot-begin="$emit('change-timeslot-begin', $event)"
+                            @change-timeslot-end="$emit('change-timeslot-end', $event)"
+                            @remove-timeslot="$emit('remove-timeslot', $event)"
+                            @timeslot-to-new-task="$emit('timeslot-to-new-task', $event)"
+                            @timeslot-to-task="$emit('timeslot-to-task', $event)"
+                        />
+                    </div>
+
+                    <div class="subtasks" v-if="task.subTasks.length">
+                        <task
+                            v-for="subTask in task.subTasks"
+                            :key="subTask.id"
+                            :task="subTask"
+                            @add-task="$emit('add-task', $event)"
+                            @remove-task="$emit('remove-task', $event)"
+                            @reset-task="$emit('reset-task', $event)"
+                            @start-task="$emit('start-task', $event)"
+                            @stop-task="$emit('stop-task', $event)"
+                            @move-task="$emit('move-task', $event)"
+                            @change-timeslot-begin="$emit('change-timeslot-begin', $event)"
+                            @change-timeslot-end="$emit('change-timeslot-end', $event)"
+                            @remove-timeslot="$emit('remove-timeslot', $event)"
+                            @timeslot-to-new-task="$emit('timeslot-to-new-task', $event)"
+                            @timeslot-to-task="$emit('timeslot-to-task', $event)"
+                        />
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <script type="x-template" id="timeslot">
+            <div class="timeslot" :class="{ active: timeslot.isActive }">
+                <span class="timeslot-controls">
+                    <span class="timeslot-control"
+                        title="Move to new subtask"
+                        @click="$emit('timeslot-to-new-task', timeslot.id)">
+                        <i class="far fa-window-maximize"></i>
+                    </span>
+                    <span class="timeslot-control timeslot-to-task"
+                        v-if="task.parentId"
+                        title="Move to parent task"
+                        @click="$emit('timeslot-to-task', { id: timeslot.id, taskId: task.parentId })">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </span>
+                    <span class="timeslot-control timeslot-remove"
+                        title="Remove"
+                        @click="$emit('remove-timeslot', timeslot.id)">
+                        <i class="fas fa-trash-alt"></i>
+                    </span>
+                </span>
+
+                <span class="timeslot-period">
+                    <span class="timeslot-begin">
+                        <span
+                            v-if="begin == null"
+                            v-text="formatTimestamp(timeslot.begin, '???')"
+                            @click="begin = formatTimestamp(timeslot.begin, '???')">
+                        </span>
+
+                        <input class="edit-time" type="text" v-if="begin != null"
+                               v-model="begin" v-focus
+                               @keyup.enter="changeTimeslotBegin(begin)"
+                        />
+                    </span>
+
+                    <span class="timeslot-separator">&ndash;</span>
+
+                    <span class="timeslot-end">
+                        <span
+                            v-if="end == null"
+                            v-text="formatTimestamp(timeslot.end, '???')"
+                            @click="end = formatTimestamp(timeslot.end, '???')"
+                        ></span>
+                        <input type="text" class="edit-time" v-if="end != null"
+                            v-model="end" v-focus
+                            @keyup.enter="changeTimeslotEnd(end)"
+                        />
+                    </span>
+                </span>
+
+                <span class="timeslot-right">
+                    <span class="timeslot-duration" v-text="formatDuration(timeslot.duration, { showZero: false })"></span>
+                </span>
+            </div>
+        </script>
+
+        <script type="x-template" id="confirm-dialog">
+            <div class="confirm-dialog-wrapper">
+                <div class="confirm-dialog">
+                    <div class="text" v-text="config.text"></div>
+                    <div class="buttons">
+                        <button class="cancel" type="button" @click="cancel()" v-text="config.cancelText"></button>
+                        <button class="ok" type="button" @click="ok()" v-text="config.okText"></button>
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <script src="vue-2.6.6.min.js"></script>
+        <script src="script.min.js"></script>
+    </body>
+</html>
