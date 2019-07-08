@@ -1,9 +1,18 @@
 {
-  "main.css": "static/css/main.74f1ab78.css",
-  "main.css.map": "static/css/main.74f1ab78.css.map",
-  "main.js": "static/js/main.bb335e53.js",
-  "main.js.map": "static/js/main.bb335e53.js.map",
-  "static\\media\\clockwise.svg": "static/media/clockwise.942198c7.svg",
-  "static\\media\\counter-clockwise.svg": "static/media/counter-clockwise.d21e64eb.svg",
-  "static\\media\\fiene.png": "static/media/fiene.bd1a0420.png"
+  "files": {
+    "main.css": "/pentago/static/css/main.6e63de31.chunk.css",
+    "main.js": "/pentago/static/js/main.7c2df92b.chunk.js",
+    "main.js.map": "/pentago/static/js/main.7c2df92b.chunk.js.map",
+    "runtime~main.js": "/pentago/static/js/runtime~main.3aaa5e29.js",
+    "runtime~main.js.map": "/pentago/static/js/runtime~main.3aaa5e29.js.map",
+    "static/js/2.642df18d.chunk.js": "/pentago/static/js/2.642df18d.chunk.js",
+    "static/js/2.642df18d.chunk.js.map": "/pentago/static/js/2.642df18d.chunk.js.map",
+    "index.html": "/pentago/index.html",
+    "precache-manifest.3d2928f383b583af0f50dc8a0be4695b.js": "/pentago/precache-manifest.3d2928f383b583af0f50dc8a0be4695b.js",
+    "service-worker.js": "/pentago/service-worker.js",
+    "static/css/main.6e63de31.chunk.css.map": "/pentago/static/css/main.6e63de31.chunk.css.map",
+    "static/media/clockwise.svg": "/pentago/static/media/clockwise.942198c7.svg",
+    "static/media/counter-clockwise.svg": "/pentago/static/media/counter-clockwise.d21e64eb.svg",
+    "static/media/fiene.png": "/pentago/static/media/fiene.bd1a0420.png"
+  }
 }
