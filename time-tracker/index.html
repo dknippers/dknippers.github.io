@@ -2,24 +2,11 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, shrink-to-fit=no"
-        />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="theme-color" content="#2e3436" />
 
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="favicon-32x32.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="favicon-16x16.png"
-        />
+        <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
 
         <link rel="stylesheet" href="style.css" />
         <link href="fa/css/fontawesome.min.css" rel="stylesheet" />
@@ -28,16 +15,11 @@
         <title>Time Tracker</title>
     </head>
     <body>
-        <div id="time-tracker" :class="{ loaded: 1 }">
+        <div id="time-tracker" :class="{ loaded: 1, dropzone: dropzone }">
             <main>
                 <div class="top-container">
                     <div class="left">
-                        <button
-                            v-if="rootTasks.length > 0"
-                            type="button"
-                            @click="clearAll()"
-                            class="remove-all"
-                        >
+                        <button v-if="rootTasks.length > 0" type="button" @click="clearAll()" class="remove-all">
                             <i class="far fa-trash-alt"></i>
                             <span class="text">remove all</span>
                         </button>
@@ -51,10 +33,7 @@
                         />
                     </div>
                     <div class="right">
-                        <div
-                            class="total-duration"
-                            :class="{ visible: absoluteTotalDuration > 0 }"
-                        >
+                        <div class="total-duration" :class="{ visible: absoluteTotalDuration > 0 }">
                             <i class="far fa-clock"></i>
                             <span
                                 class="clock"
@@ -83,10 +62,7 @@
                 </task>
             </main>
 
-            <confirm-dialog
-                v-if="ui.confirm.ok"
-                :config="ui.confirm"
-            ></confirm-dialog>
+            <confirm-dialog v-if="ui.confirm.ok" :config="ui.confirm"></confirm-dialog>
         </div>
 
         <script type="x-template" id="task">
